@@ -1,0 +1,49 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'dev.stjepano'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+application {
+    mainClass = 'dev.stjepano.ffi.Main'
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.withType(JavaExec).configureEach {
+    jvmArgs = ['--enable-native-access=ALL-UNNAMED']
+}
+
+tasks.withType(Test).configureEach {
+    jvmArgs = ['--enable-native-access=ALL-UNNAMED']
+}
+
+tasks.register('configureNativeLib', Exec) {
+    workingDir 'csrc'
+    commandLine 'cmake', '-B', 'build', '-S', '.', '-DCMAKE_BUILD_TYPE=Release'
+}
+
+tasks.register('buildNativeLib', Exec) {
+    dependsOn('configureNativeLib')
+
+    workingDir 'csrc'
+    commandLine 'cmake', '--build', 'build'
+}
+
+tasks.named('run') {
+    dependsOn 'buildNativeLib'
+}
