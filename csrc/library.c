@@ -37,3 +37,7 @@ void FreeText(char* Text) {
     free(Text);
 }
 
+int CallbackFn(int(*callback)(const char *Str)) {
+    return callback("You have been called from C native function. How do you feel, you punk?");
+}
+

@@ -10,6 +10,11 @@ public class Main {
         LibTest.init();
         LibTest.printHello();
         LibTest.printText("This is text from java!!!!");
+        int ret = LibTest.callbackFn(s -> {
+            IO.println("String callback from C: " + s);
+            return s.length();
+        });
+        IO.println("ret = " + ret);
 
         long t0 = System.nanoTime();
 
