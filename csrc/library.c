@@ -6,6 +6,7 @@
 
 void PrintHello() {
     printf("Hello World from native library\n");
+    fflush(stdout);
 }
 
 void PrintText(const char* Text) {
@@ -14,6 +15,7 @@ void PrintText(const char* Text) {
     } else {
         printf("The text is '%s'\n", Text);
     }
+    fflush(stdout);
 }
 
 char* GetText(int* OutLength) {
@@ -39,5 +41,13 @@ void FreeText(char* Text) {
 
 int CallbackFn(int(*callback)(const char *Str)) {
     return callback("You have been called from C native function. How do you feel, you punk?");
+}
+
+void DoSomething(const something *Something) {
+    int res = printf(Something->Fmt, Something->Value1, Something->Value2);
+    fflush(stdout);
+    if (Something->Callback) {
+        Something->Callback(res);
+    }
 }
 

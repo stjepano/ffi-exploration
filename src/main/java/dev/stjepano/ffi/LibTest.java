@@ -20,6 +20,7 @@ public class LibTest {
     private static MethodHandle hGetTextNonAlloc;
     private static MethodHandle hFreeText;
     private static MethodHandle hCallbackFn;
+    private static MethodHandle hDoSomething;
 
 
     private static MethodHandle findFunction(String functionName, FunctionDescriptor functionDescriptor) {
@@ -37,6 +38,7 @@ public class LibTest {
         hGetTextNonAlloc = findFunction("GetTextNonAlloc", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
         hFreeText = findFunction("FreeText", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
         hCallbackFn = findFunction("CallbackFn", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+        hDoSomething = findFunction("DoSomething", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
     }
 
     public static void printHello() {
@@ -120,6 +122,42 @@ public class LibTest {
             throw new RuntimeException(e);
         }
 
+    }
+
+    public static void doSomething(String fmtStr, int val1, int val2) {
+        final var structLayout = MemoryLayout.structLayout(
+                ValueLayout.JAVA_INT.withName("Val1"),
+                ValueLayout.JAVA_INT.withName("Val2"),
+                ValueLayout.ADDRESS.withName("Fmt"),
+                ValueLayout.ADDRESS.withName("Callback")
+        );
+        // VarHandle val1Handle = structLayout.varHandle(MemoryLayout.PathElement.groupElement("Val1"));
+        // VarHandle val2Handle = structLayout.varHandle(MemoryLayout.PathElement.groupElement("Val2"));
+        // VarHandle fmtHandle = structLayout.varHandle(MemoryLayout.PathElement.groupElement("Fmt"));
+        // VarHandle callbackHandle = structLayout.varHandle(MemoryLayout.PathElement.groupElement("Callback"));
+
+        long val1Offset = structLayout.byteOffset(MemoryLayout.PathElement.groupElement("Val1"));
+        long val2Offset = structLayout.byteOffset(MemoryLayout.PathElement.groupElement("Val2"));
+        long fmtOffset = structLayout.byteOffset(MemoryLayout.PathElement.groupElement("Fmt"));
+        long callbackOffset = structLayout.byteOffset(MemoryLayout.PathElement.groupElement("Callback"));
+
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment struct = arena.allocate(structLayout);
+            MemorySegment fmtStrPtr = arena.allocateFrom(fmtStr);
+            // val1Handle.set(struct, 0L, val1);
+            // val2Handle.set(struct, 0L, val2);
+            // fmtHandle.set(struct, 0L, fmtStrPtr);
+            // MemorySegment callbackPtr = MemorySegment.NULL;
+            // callbackHandle.set(struct, 0L, callbackPtr);
+            struct.set(ValueLayout.JAVA_INT, val1Offset, val1);
+            struct.set(ValueLayout.JAVA_INT, val2Offset, val2);
+            struct.set(ValueLayout.ADDRESS, fmtOffset, fmtStrPtr);
+            struct.set(ValueLayout.ADDRESS, callbackOffset, MemorySegment.NULL);
+
+            hDoSomething.invokeExact(struct);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void freeText(MemorySegment segment) {

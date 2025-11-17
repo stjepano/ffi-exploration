@@ -15,6 +15,7 @@ public class Main {
             return s.length();
         });
         IO.println("ret = " + ret);
+        LibTest.doSomething("Format string in java %d, %d\n", 55, 66);
 
         long t0 = System.nanoTime();
 
